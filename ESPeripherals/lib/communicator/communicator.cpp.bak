@@ -1,0 +1,97 @@
+#include "communicator.h"
+
+bool Communicator::login() {
+  int nWifis = WiFi.scanNetworks();
+  char wifiSSID[10];
+  #ifdef debug
+    Serial.println(nWifis);
+  #endif
+    for(int wifi = 0; wifi < nWifis; wifi++)
+    {
+      String potSSID = WiFi.SSID(wifi);
+
+      potSSID.toCharArray(wifiSSID, 10);
+      #ifdef debug
+      Serial.println(potSSID);
+      #endif
+      if (strncmp(wifiSSID, ssid_start,7) == 0) {
+        // Start Login Routine
+        #ifdef debug
+        Serial.println("MATCH!");
+        #endif
+        WiFi.begin(wifiSSID, pw);
+
+        #ifdef debug
+          Serial.println();
+          Serial.print("Connecting to ");
+          Serial.println(wifiSSID);
+        #endif
+
+        while (WiFi.status() != WL_CONNECTED){
+          #ifdef debug
+            Serial.print(".");
+          #endif
+            delay(500);
+        }
+
+        setup_mqtt(callback_for_login);
+
+        // Mac Adresse holen und umformatieren.
+        byte myMac[6];
+        WiFi.macAddress(myMac);
+        snprintf(macChar, 13, "%02X%02X%02X%02X%02X%02X\n", myMac[0],myMac[1],myMac[2],myMac[3],myMac[4],myMac[5]);
+
+        // Hello Topic zusammenbauen
+        memcpy(helloTopic, "hello/", 6);
+        memcpy(&helloTopic[6], macChar, 13);
+
+        client.publish(helloTopic, "1");
+
+        #ifdef debug
+          Serial.print("waiting for handshake to complete.")
+        #endif
+
+        while (completedHandshake == false){
+          delay(500);
+          #ifdef debug
+            Serial.print(".")
+          #endif
+        }
+
+        if (connectedToRightWifi == true) {
+          dev->setNumber(deviceNumber);
+          break;
+        }
+
+      }
+      else {
+        #ifdef debug
+        Serial.println("NO MATCH!");
+        #endif
+      }
+    }
+}
+
+void Communicator::callback_for_login(char* topic, byte* payload, unsigned int length) {
+    String msg = "";
+    for (int i=0;i<length;i++) {
+        msg += (char)payload[i];
+      }
+    #ifdef debug
+      Serial.println(msg);
+    #endif
+
+    if (strcmp(topic,helloTopic)==0) {
+      int answer = msg.toInt();
+      if (answer == 0) {
+        // falsches WiFi, also raus hier
+        connectedToRightWifi = false;
+        completedHandshake = true;
+      }
+      else {
+        completedHandshake = true;
+        connectedToRightWifi = true;
+        deviceNumber = answer;
+      }
+    }
+}

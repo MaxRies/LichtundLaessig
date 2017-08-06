@@ -1,0 +1,20 @@
+#include <functional>
+#include <ESP8266WiFi.h>
+#define MQTT_CALLBACK_SIGNATURE std::function<void(char*, uint8_t*, unsigned int)> callback
+
+char ssid_start[] = "llbrain";
+char pw[] = "lichtundlaessig!";
+
+char helloTopic[19];
+
+class Communicator {
+  private:
+    bool handshake_complete;
+    bool connected_to_right_wifi;
+    void callback_for_login(char* topic, byte* payload, unsigned int length);
+  public:
+    bool login();
+    void setup_mqtt(MQTT_CALLBACK_SIGNATURE);
+    void set_callback(MQTT_CALLBACK_SIGNATURE);
+
+};

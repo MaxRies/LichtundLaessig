@@ -1,0 +1,45 @@
+/*
+Control code for the Mit Dir Button Boxes.
+*/
+
+#include "knopfbox.h"
+
+void callback(char* topic, byte* payload, unsigned int length);
+
+Knopfbox gruen(1, callback);
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  String msg = "";
+  for (int i=0;i<length;i++) {
+      msg += (char)payload[i];
+    }
+  if (strcmp(topic,"wifi/setupMode")==0) {
+    if msg == "true" {
+      // richtiges WiFi connected, also hier bleiben!
+    }
+    else {
+      // nächstes WiFi!
+    }
+  }
+  if (strcmp(topic, "/name") == 0) {
+    if (gruen.configMode) {
+      gruen.
+    }
+  }
+}
+
+
+void setup() {
+  // pins initialisieren
+  gruen.pinSetup();
+  // wifi anschmeißen
+  gruen.setupWifi();
+}
+
+void loop() {
+// messsages abholen
+  gruen.loop();
+// piepsen, leuchten, was auch immer
+
+// buttons checken
+}

@@ -1,0 +1,36 @@
+#ifndef communication_h
+#define communication_h
+
+#include <Arduino.h>
+#include "device.h"
+
+#define MQTT_CALLBACK_SIGNATURE std::function<void(char*, uint8_t*, unsigned int)> callback
+
+// Konstanten
+const char* ssid_start = "llbrain";
+const char* pw = "lichtundlaessig!";
+const char* mqtt_server = "192.168.1.1";
+
+// Flags und Variablen
+bool connectedToRightWifi = false;
+bool completedHandshake = false;
+char macChar[13];
+char wifiSSID[10];
+char helloTopic[19];
+int deviceNumber;
+
+// Public Functions
+void login(Device * dev);
+void sendMessage(char* topic, char* message);
+
+// Private Functions
+
+void try_to_login(char * wifiSSID);
+void setup_wifi(Device* dev);
+void find_wifis();
+void setup_mqtt(MQTT_CALLBACK_SIGNATURE);
+void callback_for_login(char* topic, byte* payload, unsigned int length);
+bool subscribe_to_topics(char* type_of_device);
+
+
+#endif

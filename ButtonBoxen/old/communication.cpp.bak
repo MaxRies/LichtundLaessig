@@ -1,0 +1,157 @@
+/*
+MQTT Communication module for Licht&Laessig Peripherie
+*/
+
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include "communication.h"
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+
+void login(Device * dev){
+  int nWifis = WiFi.scanNetworks();
+  #ifdef debug
+    Serial.println(nWifis);
+  #endif
+    for(int wifi = 0; wifi < nWifis; wifi++)
+    {
+      String potSSID = WiFi.SSID(wifi);
+      potSSID.toCharArray(wifiSSID, 10);
+      #ifdef debug
+      Serial.println(potSSID);
+      #endif
+      if (strncmp(wifiSSID, ssid_start,7) == 0) {
+        // Start Login Routine
+        #ifdef debug
+        Serial.println("MATCH!");
+        #endif
+        try_to_login(wifiSSID);
+        if (connectedToRightWifi == true) {
+          dev->setNumber(deviceNumber);
+          break;
+        }
+
+      }
+      else {
+        #ifdef debug
+        Serial.println("NO MATCH!");
+        #endif
+      }
+    }
+}
+
+
+void try_to_login(char *SSID){
+  /*
+  Ablauf:
+  Wifi SSID connecten
+  Mac und Device Type an hello topic schicken
+  warten, was auf dem topic /hello/[mac] zurückkommt
+  Wenn 0: Handshake complete und connectedToRightWifi = false
+  wenn n: n als device ID speichern, callback des hauptprogramms
+          für den MQTT Broker hinterlegen.
+  */
+  WiFi.begin(SSID, pw);
+
+  #ifdef debug
+    Serial.println();
+    Serial.print("Connecting to ");
+    Serial.println(SSID);
+  #endif
+
+  while (WiFi.status() != WL_CONNECTED){
+    #ifdef debug
+      Serial.print(".");
+    #endif
+      delay(500);
+  }
+
+  setup_mqtt(callback_for_login);
+
+  // Mac Adresse holen und umformatieren.
+  byte myMac[6];
+  WiFi.macAddress(myMac);
+  snprintf(macChar, 13, "%02X%02X%02X%02X%02X%02X\n", myMac[0],myMac[1],myMac[2],myMac[3],myMac[4],myMac[5]);
+
+  // Hello Topic zusammenbauen
+  memcpy(helloTopic, "hello/", 6);
+  memcpy(&helloTopic[6], macChar, 13);
+
+  client.publish(helloTopic, "1");
+
+  #ifdef debug
+    Serial.print("waiting for handshake to complete.")
+  #endif
+
+  while (completedHandshake == false){
+    delay(500);
+    #ifdef debug
+      Serial.print(".")
+    #endif
+  }
+}
+
+void callback_for_login(char* topic, byte* payload, unsigned int length) {
+  String msg = "";
+  for (int i=0;i<length;i++) {
+      msg += (char)payload[i];
+    }
+  #ifdef debug
+    Serial.println(msg);
+  #endif
+
+  if (strcmp(topic,helloTopic)==0) {
+    int answer = msg.toInt();
+    if (answer == 0) {
+      // falsches WiFi, also raus hier
+      connectedToRightWifi = false;
+      completedHandshake = true;
+    }
+    else {
+      completedHandshake = true;
+      connectedToRightWifi = true;
+      deviceNumber = answer;
+    }
+  }
+}
+
+
+void setup_mqtt(MQTT_CALLBACK_SIGNATURE) {
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+}
+
+/*bool subscribe_to_topics(char * type_of_device) {
+  bool error = false;
+
+  if (client.subscribe("hello/", 2)) {
+    #ifdef debug
+    Serial.print("successfully subscribed to: wifi/setupMode");
+    Serial.println();
+    #endif
+  }
+  else {
+    #ifdef debug
+    Serial.print("failed to subscribe to: wifi/setupMode");
+    Serial.println();
+    #endif
+    error = true;
+  }
+
+  if (client.subscribe(strcat(type_of_device,"/#"), 1)) {
+    #ifdef debug
+    Serial.print("successfully subscribed to: ");
+    Serial.println(strcat(type_of_device, "/#"));
+    #endif
+  }
+  else {
+    #ifdef debug
+    Serial.print("failed to subscribe to: ");
+    Serial.println(strcat(type_of_device, "/#"));
+    #endif
+    error = true;
+  }
+  return error;
+}*/

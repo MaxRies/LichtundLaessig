@@ -1,0 +1,8 @@
+/DMX_kill
+-> alles auf null setzen
+
+/DMX_update
+msg: channel,value,channel,value,channel,value...
+
+/DMX_init
+msg: n (int) - Anzahl der Channels die initialisiert werden.

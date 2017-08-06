@@ -1,0 +1,5 @@
+Seilwinde/[id]/drop (int ms)
+-> Fährt Seilwinde ms Millisekunden nach unten
+
+Seilwinde/[id]/lift (int ms)
+-> Hebt Seilwinde ms Millisekunden an.

@@ -1,0 +1,24 @@
+Topic: /vibe
+msg: 1 -> dauervibration
+msg: 0 -> vibration aus (auch vibe_n_times)
+
+Topic: /vibe_n_times
+msg: n (int) -> Vibriert mit 2 Hz n mal.
+
+Topic: /beep
+msg: 1 -> Dauerbeep
+msg: 0 -> beep aus.
+
+Topic: /beep_n_times 
+msg: n (int) -> Pieps mit 2 Hz n mal.
+
+Topic: /light
+msg: 1 -> Dauerlicht an
+msg: 0 -> Lichter aus (auch flash!)
+
+Topic: /flash
+msg: 1 -> Dauerflashen an (Box blinkt für immer!)
+msg: 0 -> Dauerflashen aus
+
+Topic: /flash_n_times
+msg: n (int) -> Box blinkt n mal.
