@@ -14,8 +14,8 @@ const char* type = "StandardButtonBox";
 
 // Kommunikationskram
 IPAddress mqtt_server(192,168,0,2);
-const char* ssid_start = "llbrain";
-const char* pw = "lichtundlaessig!";
+const char* ssid_start = ;
+const char* pw = ;
 
 
 // Globale Variablen
